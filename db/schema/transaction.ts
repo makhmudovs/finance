@@ -1,14 +1,14 @@
 import { pgTable, text, numeric, timestamp, uuid } from "drizzle-orm/pg-core";
-import { usersTable } from "./user";
+import { user } from "./auth-schema";
 import { categoryEnum, transactionTypeEnum } from "./enums";
 import { InferInsertModel, InferSelectModel } from "drizzle-orm";
 
 export const transactionsTable = pgTable("transactions", {
   id: uuid("id").defaultRandom().primaryKey(),
 
-  userId: uuid("user_id")
+  userId: text("user_id")
     .notNull()
-    .references(() => usersTable.id, { onDelete: "cascade" }),
+    .references(() => user.id, { onDelete: "cascade" }),
 
   amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
   transaction_type: transactionTypeEnum("transaction_type").notNull(),

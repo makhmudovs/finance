@@ -8,15 +8,15 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { categoryEnum, frequencyEnum } from "./enums";
-import { usersTable } from "./user";
+import { user } from "./auth-schema";
 import { InferInsertModel, InferSelectModel } from "drizzle-orm";
 
 export const recurringBillsTable = pgTable("recurring_bills", {
   id: uuid("id").defaultRandom().primaryKey(),
 
-  userId: uuid("user_id")
+  userId: text("user_id")
     .notNull()
-    .references(() => usersTable.id, { onDelete: "cascade" }),
+    .references(() => user.id, { onDelete: "cascade" }),
 
   name: text("name").notNull(),
   amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
