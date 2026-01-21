@@ -22,7 +22,7 @@ import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
 
-export function LoginForm({
+export function RegisterForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
@@ -34,13 +34,16 @@ export function LoginForm({
     e.preventDefault();
 
     const formData = new FormData(e.currentTarget);
+    const firstName = formData.get("firstName") as string;
+    const lastName = formData.get("lastName") as string;
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
 
-    authClient.signIn.email(
+    authClient.signUp.email(
       {
         email,
         password,
+        name: firstName + " " + lastName,
       },
       {
         onRequest: () => {
@@ -55,7 +58,7 @@ export function LoginForm({
           console.error({ name: error.name, message: error.message });
           setError(error.message);
           setLoading(false);
-          toast.error(error.message);
+          toast(error.message);
         },
       }
     );
@@ -65,14 +68,34 @@ export function LoginForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle>Login to your account</CardTitle>
+          <CardTitle>Create a new Account!</CardTitle>
           <CardDescription>
-            Enter your email below to login to your account
+            Enter your email below to make a new account.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit}>
             <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="firstName">First Name</FieldLabel>
+                <Input
+                  id="firstName"
+                  type="text"
+                  name="firstName"
+                  placeholder="Jon"
+                  required
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="lastName">Last Name</FieldLabel>
+                <Input
+                  id="lastName"
+                  type="text"
+                  name="lastName"
+                  placeholder="Doe"
+                  required
+                />
+              </Field>
               <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
                 <Input
@@ -98,14 +121,13 @@ export function LoginForm({
 
               <Field>
                 <Button disabled={loading} type="submit">
-                  {loading ? "Signing in..." : "Sign In"}
+                  {loading ? "Signing up..." : "Sign Up"}
                 </Button>
                 {/* <Button variant="outline" type="submit">
                   Login with Google
                 </Button> */}
                 <FieldDescription className="text-center">
-                  Don&apos;t have an account?{" "}
-                  <Link href="/register">Sign up</Link>
+                  Already have an account? <Link href="/login">Sign in</Link>
                 </FieldDescription>
               </Field>
             </FieldGroup>
