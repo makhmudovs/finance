@@ -27,6 +27,12 @@ export default function Header() {
       name: "Transactions",
     },
     {
+      path: "/dashboard/transactions/create",
+      desc: "Create Transaction",
+      name: "Transactions",
+    },
+    
+    {
       path: "/dashboard/budgets",
       desc: "Manage budgets",
       name: "Budgets",

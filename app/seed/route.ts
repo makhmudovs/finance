@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import { db } from "@/db/index";
 import {
-  usersTable,
+  user,
   transactionsTable,
   budgetsTable,
   potsTable,
@@ -15,27 +15,25 @@ import {
   dummyRecurringBills,
 } from "@/app/lib/placeholder-data";
 
-async function seedUsers() {
-  // Optional: hash passwords before inserting (recommended!)
-  const usersWithHashedPasswords = await Promise.all(
-    dummyUsers.map(async (user) => ({
-      ...user,
-      password: await bcrypt.hash(user.password, 10),
-    }))
-  );
+// async function seedUsers() {
+//   // Optional: hash passwords before inserting (recommended!)
+//   const usersWithHashedPasswords = await Promise.all(
+//     dummyUsers.map(async (user) => ({
+//       ...user,
+//       password: await bcrypt.hash(user.password, 10),
+//     }))
+//   );
 
-  const insertedUsers = await db
-    .insert(usersTable)
-    .values(usersWithHashedPasswords)
-    .returning({
-      id: usersTable.id,
-      email: usersTable.email,
-      created_time: usersTable.created_time,
-      user_type: usersTable.user_type,
-    });
+//   const insertedUsers = await db
+//     .insert(user)
+//     .values(usersWithHashedPasswords)
+//     .returning({
+//       id: user.id,
+//       email: user.email,
+//     });
 
-  return insertedUsers;
-}
+//   return insertedUsers;
+// }
 
 async function seedTransactions() {
   return db.insert(transactionsTable).values(dummyTransactions);
@@ -56,8 +54,8 @@ async function seedRecurringBills() {
 export async function GET() {
   try {
     // 1. Seed users first (because other tables reference userId)
-    const users = await seedUsers();
-    console.log(`→ Inserted ${users.length} users`);
+    // const users = await seedUsers();
+    // console.log(`→ Inserted ${users.length} users`);
 
     // 2. Then seed everything else (can be parallel)
     const [transactions, budgets, pots, bills] = await Promise.all([
@@ -77,7 +75,7 @@ export async function GET() {
     return Response.json({
       success: true,
       message: "Database seeded successfully",
-      usersInserted: users.length,
+      // usersInserted: users.length,
       details: {
         transactions: transactions.rowCount ?? 0,
         budgets: budgets.rowCount ?? 0,
