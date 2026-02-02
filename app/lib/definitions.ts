@@ -2,12 +2,7 @@
 // It describes the shape of the data, and what data type each property should accept.
 // For simplicity of teaching, we're manually defining these types.
 // However, these types are generated automatically if you're using an ORM such as Prisma.
-export type User = {
-  id: string;
-  name: string;
-  email: string;
-  password: string;
-};
+
 
 export type Customer = {
   id: string;
@@ -117,3 +112,53 @@ export type FormState =
       message?: string;
     }
   | undefined;
+
+export type transactionsType = {
+  id: string;
+  amount: string;
+  transaction_type: "income" | "expense";
+  category:
+    | "groceries"
+    | "transport"
+    | "entertainment"
+    | "bills"
+    | "shopping"
+    | "dining"
+    | "salary"
+    | "other";
+  description: string | null;
+  merchant: string | null;
+  date: Date;
+  createdAt: Date;
+}[];
+
+export type TransactionType = {
+  id: string;
+  amount: string;
+  transaction_type: "income" | "expense";
+  category:
+    | "groceries"
+    | "transport"
+    | "entertainment"
+    | "bills"
+    | "shopping"
+    | "dining"
+    | "salary"
+    | "other";
+  description: string | null;
+  merchant: string | null;
+  date: Date;
+  createdAt: Date;
+};
+
+
+// types/user.ts
+export type User = {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+  email: string;
+  emailVerified: boolean;
+  name: string;
+  image?: string | null;
+};

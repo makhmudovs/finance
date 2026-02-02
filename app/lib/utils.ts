@@ -12,17 +12,16 @@ export const formatCurrency = (amount: number) => {
 };
 
 export const formatDateToLocal = (
-  dateStr: string,
+  date: Date | string,
   locale: string = "en-US"
 ) => {
-  const date = new Date(dateStr);
-  const options: Intl.DateTimeFormatOptions = {
+  const parsedDate = typeof date === "string" ? new Date(date) : date;
+
+  return new Intl.DateTimeFormat(locale, {
     day: "numeric",
     month: "short",
     year: "numeric",
-  };
-  const formatter = new Intl.DateTimeFormat(locale, options);
-  return formatter.format(date);
+  }).format(parsedDate);
 };
 
 export const generateYAxis = (revenue: Revenue[]) => {
@@ -80,3 +79,4 @@ export function genRefreshId() {
     ? crypto.randomUUID()
     : crypto.randomBytes(16).toString("hex");
 }
+
