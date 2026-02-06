@@ -109,7 +109,7 @@ export function EditTransactionForm({
               step="0.01"
               placeholder="Enter USD amount"
               aria-describedby="amount-error"
-              defaultValue={parseFloat(transaction.amount) / 100}
+              defaultValue={transaction.amount}
               disabled={!isFormEditable}
             />
             {state.errors?.amount && (

@@ -25,11 +25,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { deleteTransaction } from "@/app/lib/transaction-actions";
 
-export function TransactionActions({
-  transactionId,
-}: {
-  transactionId: string;
-}) {
+export function TransactionActions({ transactionId }: { transactionId: string }) {
   const [open, setOpen] = useState(false);
 
   const handleDelete = async () => {
