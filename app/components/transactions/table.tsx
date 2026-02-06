@@ -1,13 +1,5 @@
 import { fetchFilteredTransactions } from "@/app/lib/data";
 import { formatCurrency, formatDateToLocal } from "@/app/lib/utils";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -16,31 +8,25 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { MoreHorizontalIcon } from "lucide-react";
-import Link from "next/link";
-
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { deleteTransaction } from "@/app/lib/transaction-actions";
 import { TransactionActions } from "./transaction-actions";
 
 export default async function TransactionsTable({
   query,
   currentPage,
+  type,
+  category,
 }: {
   query: string;
   currentPage: number;
+  type?: string;
+  category?: string;
 }) {
-  const transactions = await fetchFilteredTransactions(query, currentPage);
+  const transactions = await fetchFilteredTransactions(
+    query,
+    currentPage,
+    type,
+    category
+  );
 
   return (
     <div className="overflow-hidden rounded-md border">
@@ -86,14 +72,13 @@ export default async function TransactionsTable({
           ) : (
             <TableRow>
               <TableCell
-                colSpan={7}
+                colSpan={8}
                 className="py-6 text-left text-muted-foreground"
               >
-                <p className="text-center">Please add transactions!</p>
+                <p className="text-center">No transactions found!</p>
               </TableCell>
             </TableRow>
           )}
-          {/*  */}
         </TableBody>
       </Table>
     </div>
