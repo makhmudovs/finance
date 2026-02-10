@@ -13,20 +13,11 @@ import { TransactionActions } from "./transaction-actions";
 export default async function TransactionsTable({
   query,
   currentPage,
-  type,
-  category,
 }: {
   query: string;
   currentPage: number;
-  type?: string;
-  category?: string;
 }) {
-  const transactions = await fetchFilteredTransactions(
-    query,
-    currentPage,
-    type,
-    category
-  );
+  const transactions = await fetchFilteredTransactions(query, currentPage);
 
   return (
     <div className="overflow-hidden rounded-md border">
