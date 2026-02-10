@@ -13,7 +13,7 @@ import { InferInsertModel, InferSelectModel } from "drizzle-orm";
 export const budgetsTable = pgTable("budgets", {
   id: uuid("id").defaultRandom().primaryKey(),
 
-  userId: text("user_id")
+  userId: uuid("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
 

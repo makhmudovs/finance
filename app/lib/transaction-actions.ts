@@ -123,6 +123,8 @@ export async function createTransaction(
       createdAt: new Date(),
     });
 
+    revalidatePath("/dashboard/transactions");
+
     return {
       message: "Transaction created successfully!",
       errors: {},
