@@ -205,6 +205,8 @@ export async function updateTransaction(
       })
       .where(eq(transactionsTable.id, id));
 
+    revalidatePath(`/transactions/${id}/edit`);
+
     return {
       message: "Transaction updated successfully!",
       errors: {},

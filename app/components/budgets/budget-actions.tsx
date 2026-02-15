@@ -23,17 +23,18 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { deleteTransaction } from "@/app/lib/transaction-actions";
+import { deleteBudget } from "@/app/lib/budget-actions";
 
 export function BudgetActions({ budgetId }: { budgetId: string }) {
   const [open, setOpen] = useState(false);
 
   const handleDelete = async () => {
     try {
-      await deleteTransaction(budgetId);
+      await deleteBudget(budgetId);
       toast.success("Budget deleted successfully");
       setOpen(false);
     } catch (error) {
+      console.log("Error on budget deletion", error);
       toast.error("Failed to delete budget");
     }
   };
@@ -48,9 +49,7 @@ export function BudgetActions({ budgetId }: { budgetId: string }) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem asChild>
-          <Link href={`/dashboard/budgets/${budgetId}/edit`}>
-            Edit
-          </Link>
+          <Link href={`/dashboard/budgets/${budgetId}/edit`}>Edit</Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <AlertDialog open={open} onOpenChange={setOpen}>
@@ -68,7 +67,7 @@ export function BudgetActions({ budgetId }: { budgetId: string }) {
               <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
               <AlertDialogDescription>
                 This action cannot be undone. This will permanently delete this
-                transaction from our servers.
+                budget from your records.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
