@@ -6,8 +6,9 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { headers } from "next/headers";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { validateUser } from "./data";
 
 /* ---------------------------------- */
 /* Types                              */
@@ -48,7 +49,7 @@ const FormSchema = z.object({
     ],
     {
       message: "Please select transaction category",
-    }
+    },
   ),
   date: z.string().min(1, "Please enter a date"),
   description: z.string().min(1, "Please enter a description"),
@@ -60,18 +61,11 @@ const FormSchema = z.object({
 
 export async function createTransaction(
   _prevState: CreateTransactionState | undefined,
-  formData: FormData
+  formData: FormData,
 ): Promise<CreateTransactionState> {
-  /* ---------- Auth ---------- */
-  const session = await auth.api.getSession({
-    headers: await headers(), // you need to pass the headers object.
-  });
+  
 
-  if (!session?.user) {
-    redirect("/login");
-  }
-
-  const userId = session.user.id;
+  const userId = await validateUser();
 
   /* ---------- Validation ---------- */
   const parsed = FormSchema.safeParse({
@@ -153,8 +147,12 @@ export type UpdateTransactionState = {
 export async function updateTransaction(
   id: string,
   _prevState: UpdateTransactionState,
-  formData: FormData
+  formData: FormData,
 ): Promise<UpdateTransactionState> {
+
+
+  const userId = await validateUser();
+
   /* ---------- Validation ---------- */
   const parsed = FormSchema.safeParse({
     merchant: formData.get("merchant"),
@@ -203,7 +201,9 @@ export async function updateTransaction(
         date: new Date(date),
         description,
       })
-      .where(eq(transactionsTable.id, id));
+      .where(
+        and(eq(transactionsTable.id, id), eq(transactionsTable.userId, userId)),
+      );
 
     revalidatePath(`/transactions/${id}/edit`);
 
@@ -220,8 +220,14 @@ export async function updateTransaction(
 }
 
 export async function deleteTransaction(id: string) {
+
+  const userId = await validateUser();
   try {
-    await db.delete(transactionsTable).where(eq(transactionsTable.id, id));
+    await db
+      .delete(transactionsTable)
+      .where(
+        and(eq(transactionsTable.id, id), eq(transactionsTable.userId, userId)),
+      );
 
     revalidatePath("/dashboard/transactions");
 

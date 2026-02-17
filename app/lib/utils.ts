@@ -2,6 +2,7 @@ import { Revenue } from "./definitions";
 import { TransactionType } from "@/db/schema/transaction";
 import crypto from "crypto";
 
+
 // need to replace static types with the ones from db foler
 
 export const formatCurrency = (amount: number) => {
@@ -13,7 +14,7 @@ export const formatCurrency = (amount: number) => {
 
 export const formatDateToLocal = (
   date: Date | string,
-  locale: string = "en-US"
+  locale: string = "en-US",
 ) => {
   const parsedDate = typeof date === "string" ? new Date(date) : date;
 
@@ -22,6 +23,16 @@ export const formatDateToLocal = (
     month: "short",
     year: "numeric",
   }).format(parsedDate);
+};
+
+export const formatDateForInput = (date: Date) => {
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const hours = String(d.getHours()).padStart(2, "0");
+  const minutes = String(d.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
 export const generateYAxis = (revenue: Revenue[]) => {
@@ -79,4 +90,5 @@ export function genRefreshId() {
     ? crypto.randomUUID()
     : crypto.randomBytes(16).toString("hex");
 }
+
 
