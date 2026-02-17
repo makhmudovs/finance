@@ -4,14 +4,16 @@ import { db } from "@/db/index";
 import { budgetsTable, user } from "@/db/schema/index";
 import { auth } from "@/lib/auth";
 import { reddit } from "better-auth";
-import { or, ilike, sql, desc, eq } from "drizzle-orm";
+import { or, ilike, sql, desc, eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { validateUser } from "./data";
 
 const ITEMS_PER_PAGE = 6;
 export async function fetchBudgetPages(query: string) {
+  const userId = await validateUser();
   try {
     const result = await db
       .select({
@@ -20,19 +22,22 @@ export async function fetchBudgetPages(query: string) {
       .from(budgetsTable)
       .innerJoin(user, sql`${budgetsTable.userId} = ${user.id}`)
       .where(
-        or(
-          ilike(sql`${budgetsTable.category}::text`, `%${query}%`),
+        and(
+          eq(budgetsTable.userId, userId),
+          or(
+            ilike(sql`${budgetsTable.category}::text`, `%${query}%`),
 
-          // text columns
-          ilike(budgetsTable.name, `%${query}%`),
-          ilike(budgetsTable.period, `%${query}%`),
+            // text columns
+            ilike(budgetsTable.name, `%${query}%`),
+            ilike(budgetsTable.period, `%${query}%`),
 
-          // numeric / timestamp → text
-          ilike(sql`${budgetsTable.limit}::text`, `%${query}%`),
-          ilike(sql`${budgetsTable.spent}::text`, `%${query}%`),
-          ilike(sql`${budgetsTable.startDate}::text`, `%${query}%`),
-          ilike(sql`${budgetsTable.endDate}::text`, `%${query}%`),
-          ilike(sql`${budgetsTable.createdAt}::text`, `%${query}%`),
+            // numeric / timestamp → text
+            ilike(sql`${budgetsTable.limit}::text`, `%${query}%`),
+            ilike(sql`${budgetsTable.spent}::text`, `%${query}%`),
+            ilike(sql`${budgetsTable.startDate}::text`, `%${query}%`),
+            ilike(sql`${budgetsTable.endDate}::text`, `%${query}%`),
+            ilike(sql`${budgetsTable.createdAt}::text`, `%${query}%`),
+          ),
         ),
       );
 
@@ -46,6 +51,16 @@ export async function fetchBudgetPages(query: string) {
 
 export async function fetchFilteredBudgets(query: string, currentPage: number) {
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session?.user) {
+    auth.api.signOut();
+    redirect("/login");
+  }
+
+  const userId = session.user.id;
 
   try {
     const result = await db
@@ -64,20 +79,23 @@ export async function fetchFilteredBudgets(query: string, currentPage: number) {
       .from(budgetsTable)
       .innerJoin(user, sql`${budgetsTable.userId} = ${user.id}`)
       .where(
-        or(
-          // ✅ ENUM → TEXT
-          ilike(sql`${budgetsTable.category}::text`, `%${query}%`),
+        and(
+          eq(budgetsTable.userId, userId),
+          or(
+            // ✅ ENUM → TEXT
+            ilike(sql`${budgetsTable.category}::text`, `%${query}%`),
 
-          // text columns
-          ilike(budgetsTable.name, `%${query}%`),
-          ilike(budgetsTable.period, `%${query}%`),
+            // text columns
+            ilike(budgetsTable.name, `%${query}%`),
+            ilike(budgetsTable.period, `%${query}%`),
 
-          // numeric / timestamp → text
-          ilike(sql`${budgetsTable.limit}::text`, `%${query}%`),
-          ilike(sql`${budgetsTable.spent}::text`, `%${query}%`),
-          ilike(sql`${budgetsTable.startDate}::text`, `%${query}%`),
-          ilike(sql`${budgetsTable.endDate}::text`, `%${query}%`),
-          ilike(sql`${budgetsTable.createdAt}::text`, `%${query}%`),
+            // numeric / timestamp → text
+            ilike(sql`${budgetsTable.limit}::text`, `%${query}%`),
+            ilike(sql`${budgetsTable.spent}::text`, `%${query}%`),
+            ilike(sql`${budgetsTable.startDate}::text`, `%${query}%`),
+            ilike(sql`${budgetsTable.endDate}::text`, `%${query}%`),
+            ilike(sql`${budgetsTable.createdAt}::text`, `%${query}%`),
+          ),
         ),
       )
       .orderBy(desc(budgetsTable.createdAt))
@@ -92,11 +110,12 @@ export async function fetchFilteredBudgets(query: string, currentPage: number) {
 }
 
 export async function fetchBudgetById(id: string) {
+  const userId = await validateUser();
   try {
     const data = await db
       .select()
       .from(budgetsTable)
-      .where(eq(budgetsTable.id, id))
+      .where(and(eq(budgetsTable.id, id), eq(budgetsTable.userId, userId)))
       .limit(1);
 
     if (!data[0]) {
@@ -159,15 +178,7 @@ export async function createBudget(
   _prevState: CreateBudgetState | undefined,
   formData: FormData,
 ): Promise<CreateBudgetState> {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session?.user) {
-    redirect("/login");
-  }
-
-  const userId = session.user.id;
+  const userId = await validateUser();
 
   const parsed = FormSchema.safeParse({
     name: formData.get("name"),
@@ -228,18 +239,7 @@ export async function createBudget(
   }
 }
 
-export async function deleteBudget(id: string) {
-  try {
-    await db.delete(budgetsTable).where(eq(budgetsTable.id, id));
 
-    revalidatePath("/dashboard/budgets");
-
-    return { message: "Budget deleted successfully" };
-  } catch (error) {
-    console.error("Database Error:", error);
-    throw new Error("Failed to delete budget.");
-  }
-}
 
 export type UpdateBudgetState = {
   errors?: {
@@ -260,7 +260,7 @@ export async function updateBudget(
   _prevState: UpdateBudgetState,
   formData: FormData,
 ): Promise<UpdateBudgetState> {
-  /* ---------- Validation ---------- */
+  const userId = await validateUser();
 
   const rawIsActive = formData.get("isActive");
   const isActiveBoolean = rawIsActive === "true";
@@ -324,7 +324,7 @@ export async function updateBudget(
         endDate: new Date(endDate),
         isActive,
       })
-      .where(eq(budgetsTable.id, id));
+      .where(and(eq(budgetsTable.id, id), eq(budgetsTable.userId, userId)));
 
     revalidatePath(`/budgets/${id}/edit`);
     return {
@@ -339,9 +339,13 @@ export async function updateBudget(
   }
 }
 
-export async function deleteTransaction(id: string) {
+
+export async function deleteBudget(id: string) {
+  const userId = await validateUser();
   try {
-    await db.delete(budgetsTable).where(eq(budgetsTable.id, id));
+    await db
+      .delete(budgetsTable)
+      .where(and(eq(budgetsTable.id, id), eq(budgetsTable.userId, userId)));
 
     revalidatePath("/dashboard/budgets");
 
